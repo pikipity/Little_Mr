@@ -132,22 +132,33 @@ boolean go=false;
 int target[]={0,0};
 //value talk
 String talk="Hello";
-boolean begin=true;
 int talk_count=0;
 int talk_num;
+//begin introduction
+boolean begin=true;
 String begin_text[]={"I'm Little Mr.","Let's play with me!!"};
+//stay talk
 boolean stay_talk=false;
 String stay_text[]={"So boring...","Are you sleeping?","zzZZ"};
 Date dNow = new Date( );
 SimpleDateFormat day=new SimpleDateFormat ("yyyy.MM.dd");
 SimpleDateFormat time_format=new SimpleDateFormat ("HH:mm:ss");
+SimpleDateFormat complex_format=new SimpleDateFormat ("yyyy.MM.dd  HH:mm:ss");
+//press talk
 boolean press_talk=false;
 String press_text[]={"What are you doing?!","Oh!!","??","Go! Go!","What happened??","DoluMahupupu...",
-                     "I can fly!","I am SUPERMAN!","Am I swimming or flying? pupu..."};
+                     "I can fly!","I am SUPERMAN!","Am I swimming or flying?\npupu..."};
+//communication
+boolean commu=false;
+String input_text="Input what you want to say";
+String output_text="";
+String master_name="";
+boolean input_name=false;
+boolean input_name_adjust=false;
 
 void setup(){
   //init game
-  size(human_move_range[0],human_move_range[1]);
+  size(human_move_range[0],human_move_range[1]+20);
   frameRate(fps);
   smooth();
   strokeJoin(ROUND);
@@ -165,11 +176,102 @@ void draw(){
   draw_text();
   draw_target();
   check_talk();
+  text_input_area();
+}
+
+void text_input_area(){
+  fill(255);
+  rect(0,human_move_range[1],human_move_range[0],20);
+  fill(0);
+  textAlign(LEFT);
+  text(input_text+(frameCount/10 % 2 == 0 ? "_" : ""), 0, human_move_range[1],human_move_range[0],20);
+}
+
+void keyPressed() {
+  if (key != CODED) {
+    switch(key) {
+    case BACKSPACE:
+      input_text = input_text.substring(0,max(0,input_text.length()-1));
+      break;
+    case TAB:
+      input_text += "    ";
+      break;
+    case ENTER:
+    case RETURN:
+      if(!begin){
+        if(input_name){
+          input_name=false;
+          master_name=input_text;
+          output_text="Is your name \""+master_name+"\"?(y or n)";
+          input_name_adjust=true;
+        }else if(input_name_adjust){
+          input_name_adjust=false;
+          if(input_text.toLowerCase().contains("n")){
+            output_text="What is your name?";
+            input_name=true;
+          }else{
+            output_text="Hello, "+master_name;
+          }
+        }else{
+          adjust_input_text();
+        }
+      }else{
+        output_text="You don't want to listen me?\nOK. I stop..";
+        begin=false;
+      }
+      commu=true;
+      talk_count=0;
+      input_text="";
+      break;
+    case ESC:
+    case DELETE:
+      break;
+    default:
+      input_text += key;
+    }
+  }
+}
+
+void adjust_input_text(){
+  if(input_text.toLowerCase().contains("time") ||
+           (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("?")) ||
+           (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("what"))){
+          output_text=complex_format.format(dNow);
+          if(Integer.parseInt(output_text.substring(12,14))==23 || Integer.parseInt(output_text.substring(12,14))<7){
+              output_text=output_text+"\nGo to sleep, now!!";
+          }
+        }else if(input_text.toLowerCase().contains("name") && input_text.toLowerCase().contains("your")){
+          output_text="My name is \"Little Mr.\"\nYeah!!!";
+        }else if(input_text.toLowerCase().contains("name") && input_text.toLowerCase().contains("my")){
+          if(master_name.length()==0){
+            output_text="Sorry\nCould you please\ntell me your name?";
+            input_name=true;
+          }else{
+            output_text="I remember your name is "+master_name+".\nI have a good memery. :-)";
+          }
+        }
+        else{
+          output_text="Did you say \""+input_text+"\"?\nI don't understand...";
+        }
 }
 
 void check_talk(){
+  if(commu){
+    stay_talk=false;
+    press_talk=false;
+    if(talk_count==0){
+      talk=output_text;
+    }else if(talk_count==240){
+      talk="";
+      output_text="";
+      talk_num=0;
+      talk_count=0;
+      commu=false;
+    }
+    talk_count++;
+  }
   if(press_talk){
-    if(talk_num<6 && talk_num>=0){
+    if(talk_num<9 && talk_num>=0){
         stay_talk=false;
         if(talk_count==0){
           talk=press_text[talk_num];
@@ -195,7 +297,7 @@ void check_talk(){
       }else if(talk_num==4){
         talk="Now, "+time_format.format(dNow);
         if(Integer.parseInt(talk.substring(5,7))==23 || Integer.parseInt(talk.substring(5,7))<7){
-          talk=talk+". Go to sleep, now!!";
+          talk=talk+"\nGo to sleep, now!!";
         }
         talk_num=25;
       }else{
@@ -218,6 +320,9 @@ void check_talk(){
         talk_count=0;
         talk_num=0;
         begin=false;
+        commu=true;
+        output_text="Could you please\ntell me your name?";
+        input_name=true;
       }
     }
   }
@@ -236,7 +341,7 @@ void mouseClicked(){
           !face)){
             if(!press_talk && !begin){
               press_talk=true;
-              talk_num=int(random(0,6));
+              talk_num=int(random(0,9));
               talk_count=0;
             }
           }else /*if(mouseY>=human_len[0]+Math.round(human_len[0]*0.3) &&
@@ -269,14 +374,14 @@ void draw_text(){
       rect(human_loca[0]-human_len[0]/2-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
       stroke(0);
       fill(0);
-      text(talk,human_loca[0]-human_len[0]/2-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
+      text(talk,human_loca[0]-human_len[0]/2-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }else{
       fill(255);
       stroke(255);
       rect(human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3)-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
       stroke(0);
       fill(0);
-      text(talk,human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3)-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
+      text(talk,human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3)-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }
     //fill(255);
   }else{
@@ -288,14 +393,14 @@ void draw_text(){
       rect(human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
       stroke(0);
       fill(0);
-      text(talk,human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
+      text(talk,human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }else{
       fill(255);
       stroke(255);
       rect(human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
       stroke(0);
       fill(0);
-      text(talk,human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
+      text(talk,human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }
     //fill(255);
   }
@@ -306,7 +411,7 @@ void check_mouse(){
   if(mousePressed){
     if(!press_talk && !begin){
         press_talk=true;
-        talk_num=int(random(0,6));
+        talk_num=int(random(0,9));
         talk_count=0;
      }
     if(hold){
