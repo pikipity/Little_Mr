@@ -110,7 +110,7 @@ void draw_human(){
   if(move){
     stay_count=0;
     move_count++;
-    if(move_count==20){
+    if(move_count==Math.round(fps*15/60)){
       move_count=0;
       move_motion=!move_motion;
       if(face){
@@ -122,7 +122,7 @@ void draw_human(){
   }else{
     move_count=0;
     stay_count++;
-    if(stay_count==60){
+    if(stay_count==fps){
       stay_count=0;
       if(Math.random()<0.2){
         face=!face;
@@ -139,23 +139,194 @@ void draw_human(){
 //count for animation
 int move_count=0;
 int stay_count=0;
+int target_count=0;
+int target_R=20;
+int fps=60;
 //value for human
+int human_move_range[]={480,480};
 int human_len[]={50,30};
 int human_loca[]={100,100};
 boolean move=false;
 boolean move_motion=false;
-boolean face=false;//true:left, false:right
+boolean face=true;//true:left, false:right
+//value for mouse control
+boolean hold=false;
+boolean go=false;
+int target[]={0,0};
 
 
 void setup(){
-  size(480,480);
-  frameRate(60);
+  //init game
+  size(human_move_range[0],human_move_range[1]);
+  frameRate(fps);
   smooth();
   strokeJoin(ROUND);
   background(255);
+  //init human
   draw_player_left(human_loca[0],human_loca[1],human_len[0],human_len[1],move_motion);
 }
 
 void draw(){
+  check_go();
+  check_mouse();
   draw_human();
+  draw_target();
 }
+
+void draw_target(){
+  if(go){
+    target_count++;
+    if(target_count==3){
+      target_count=0;
+      target_R--;
+      if(target_R==0){
+        target_R=20;
+      }
+    }
+      stroke(255);
+      fill(255);
+      rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
+      stroke(0);
+      fill(0);
+      stroke(255,0,0);
+      fill(255);
+      ellipse(target[0],target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2,target_R,target_R);
+      fill(0);
+      stroke(0);
+  }
+}
+
+void mouseClicked(){
+  if(((mouseX>=human_loca[0]-human_len[0]/2) &&
+         (mouseX<=human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3)) &&
+         (mouseY>=human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3)) &&
+         (mouseY<=human_loca[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2) &&
+         face) ||
+         ((mouseX>=human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3)) &&
+          (mouseX<=human_loca[0]+human_len[0]/2) &&
+          (mouseY>=human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3)) &&
+          (mouseY<=human_loca[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2) &&
+          !face)){
+            ;
+          }else /*if(mouseY>=human_len[0]+Math.round(human_len[0]*0.3) &&
+           mouseY<=human_move_range[1] &&
+           mouseX>=human_len[0]/2 &&
+           mouseX<=human_move_range[0]-human_len[0]/2)*/{
+             go=true;
+             if(target[0]==0 && target[1]==0){
+               target[0]=mouseX;
+               target[1]=Math.round(mouseY-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
+             }else{
+               stroke(255);
+               fill(255);
+               rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
+               stroke(0);
+               fill(0);
+               target[0]=mouseX;
+               target[1]=Math.round(mouseY-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
+             }
+          }
+}
+
+
+void check_mouse(){
+  if(mousePressed){
+    if(hold){
+      move=true;
+      if(human_loca[0]!=mouseX || human_loca[1]!=mouseY){
+        if(human_loca[0]-mouseX>0){
+          face=true;
+        }else{
+          face=false;
+        }
+        stroke(255);
+        fill(255);
+        rect(human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3),
+        human_len[0]+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),Math.round(human_len[0]*0.3)+human_len[0]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
+        fill(0);
+        stroke(0);
+        if(mouseY>=human_len[0]+Math.round(human_len[0]*0.3) &&
+           mouseY<=human_move_range[1]-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2 &&
+           mouseX>=human_len[0]/2 &&
+           mouseX<=human_move_range[0]-human_len[0]/2){
+          human_loca[0]=mouseX;
+          human_loca[1]=mouseY;
+        }else{
+          if(mouseX<human_len[0]/2){
+            human_loca[0]=human_len[0]/2;
+          }
+          if(mouseX>human_move_range[0]-human_len[0]/2){
+            human_loca[0]=human_move_range[0]-human_len[0]/2;
+          }
+          if(mouseY<human_len[0]+Math.round(human_len[0]*0.3)){
+            human_loca[1]=human_len[0]+Math.round(human_len[0]*0.3);
+          }
+          if(mouseY>human_move_range[1]-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2){
+            human_loca[1]=Math.round(human_move_range[1]-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
+          }
+        }
+      }
+    }else{
+      if(((mouseX>=human_loca[0]-human_len[0]/2) &&
+         (mouseX<=human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3)) &&
+         (mouseY>=human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3)) &&
+         (mouseY<=human_loca[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2) &&
+         face) ||
+         ((mouseX>=human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3)) &&
+          (mouseX<=human_loca[0]+human_len[0]/2) &&
+          (mouseY>=human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3)) &&
+          (mouseY<=human_loca[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2) &&
+          !face)){
+           hold=true;
+       }else{
+         hold=false;
+       }
+    }
+  }else{
+    hold=false;
+    if(go){
+      move=true;
+    }else{
+      move=false;
+      move_motion=false;
+    }
+  }
+  if(face){
+      draw_player_left(human_loca[0],human_loca[1],human_len[0],human_len[1],move_motion);
+   }else{
+      draw_player_right(human_loca[0],human_loca[1],human_len[0],human_len[1],move_motion);
+   }
+   draw_target();
+}
+
+void check_go(){
+  if(go){
+    stroke(255);
+    fill(255);
+    rect(human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3),
+    human_len[0]+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),Math.round(human_len[0]*0.3)+human_len[0]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
+    fill(0);
+    stroke(0);
+    if(target[0]-human_loca[0]<0){
+      face=true;
+    }else{
+      face=false;
+    }
+    human_loca[0]+=Math.round((target[0]-human_loca[0])*0.05);
+    human_loca[1]+=Math.round((target[1]-human_loca[1])*0.05);
+    if(Math.round((target[0]-human_loca[0])*0.05)==0 && Math.round((target[1]-human_loca[1])*0.05)==0){
+      go=false;
+      target_R=20;
+      target_count=0;
+      stroke(255);
+      fill(255);
+      rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
+      stroke(0);
+      fill(0);
+      target[0]=0;
+      target[1]=0;
+    }
+    move=true;
+  }
+}
+
