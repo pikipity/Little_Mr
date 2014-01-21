@@ -1,6 +1,8 @@
 import java.util.*;
 import java.text.*;
 
+String My_name="Little Mr.";
+
 void draw_player_left(int center_x,int center_y,int head_len,int body_len,boolean arm_move){
   fill(255);
   int center[]={center_x,center_y};
@@ -136,7 +138,7 @@ int talk_count=0;
 int talk_num;
 //begin introduction
 boolean begin=true;
-String begin_text[]={"I'm Little Mr.","Let's play with me!!"};
+String begin_text[]={"I'm "+My_name,"Let's play with me!!"};
 //stay talk
 boolean stay_talk=false;
 String stay_text[]={"So boring...","Are you sleeping?","zzZZ"};
@@ -150,7 +152,7 @@ String press_text[]={"What are you doing?!","Oh!!","??","Go! Go!","What happened
                      "I can fly!","I am SUPERMAN!","Am I swimming or flying?\npupu..."};
 //communication
 boolean commu=false;
-String input_text="Input what you want to say";
+String input_text="My name is ";
 String output_text="";
 String master_name="";
 boolean input_name=false;
@@ -201,16 +203,28 @@ void keyPressed() {
       if(!begin){
         if(input_name){
           input_name=false;
-          master_name=input_text;
+          if(input_text.toLowerCase().contains("is")){
+            master_name=input_text.substring(input_text.toLowerCase().indexOf("is"),input_text.length());
+            if(master_name.substring(0,Math.min(3,master_name.length())).contains(" ")){
+              master_name=master_name.substring(Math.min(3,master_name.length()),master_name.length());
+            }else{
+              master_name=master_name.substring(2,master_name.length());
+            }
+          }else{
+            master_name=input_text;
+          }
           output_text="Is your name \""+master_name+"\"?(y or n)";
           input_name_adjust=true;
+          input_text="N";
         }else if(input_name_adjust){
           input_name_adjust=false;
-          if(input_text.toLowerCase().contains("n")){
+          if (input_text.toLowerCase().contains("y")){
+            output_text="Hello, "+master_name;
+            input_text="";
+          }else{
             output_text="What is your name?";
             input_name=true;
-          }else{
-            output_text="Hello, "+master_name;
+            input_text="My name is ";
           }
         }else{
           adjust_input_text();
@@ -218,10 +232,10 @@ void keyPressed() {
       }else{
         output_text="You don't want to listen me?\nOK. I stop..";
         begin=false;
+        input_text="My name is ";
       }
       commu=true;
       talk_count=0;
-      input_text="";
       break;
     case ESC:
     case DELETE:
@@ -239,19 +253,33 @@ void adjust_input_text(){
           output_text=complex_format.format(dNow);
           if(Integer.parseInt(output_text.substring(12,14))==23 || Integer.parseInt(output_text.substring(12,14))<7){
               output_text=output_text+"\nGo to sleep, now!!";
+              input_text="";
           }
         }else if(input_text.toLowerCase().contains("name") && input_text.toLowerCase().contains("your")){
-          output_text="My name is \"Little Mr.\"\nYeah!!!";
+          output_text="My name is \""+My_name+"\"\nYeah!!!";
         }else if(input_text.toLowerCase().contains("name") && input_text.toLowerCase().contains("my")){
-          if(master_name.length()==0){
+          if(master_name.length()==0 && !input_text.toLowerCase().contains("is")){
             output_text="Sorry\nCould you please\ntell me your name?";
+            input_text="My name is ";
             input_name=true;
+          }else if(input_text.toLowerCase().contains("is")){
+            master_name=input_text.substring(input_text.toLowerCase().indexOf("is"),input_text.length());
+            if(master_name.substring(0,Math.min(3,master_name.length())).contains(" ")){
+              master_name=master_name.substring(Math.min(3,master_name.length()),master_name.length());
+            }else{
+              master_name=master_name.substring(2,master_name.length());
+            }
+            output_text="Is your name \""+master_name+"\"?(y or n)";
+            input_text="N";
+            input_name_adjust=true;
           }else{
             output_text="I remember your name is "+master_name+".\nI have a good memery. :-)";
+            input_text="";
           }
         }
         else{
           output_text="Did you say \""+input_text+"\"?\nI don't understand...";
+          input_text="";
         }
 }
 
@@ -320,9 +348,15 @@ void check_talk(){
         talk_count=0;
         talk_num=0;
         begin=false;
-        commu=true;
-        output_text="Could you please\ntell me your name?";
-        input_name=true;
+        if(master_name.length()==0){
+          commu=true;
+          output_text="Could you please\ntell me your name?";
+          input_text="My name is ";
+          input_name=true;
+        }else{
+          commu=true;
+          output_text="You can press\nmouse to move me, "+master_name+". :-)";
+        }
       }
     }
   }
