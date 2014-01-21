@@ -132,6 +132,28 @@ void draw_human(){
           draw_player_right(human_loca[0],human_loca[1],human_len[0],human_len[1],move_motion);
         }
       }
+      if(Math.random()<0.5){
+        int random_x=(int)(Math.random()*human_move_range[0]);
+        int random_y=(int)(Math.random()*human_move_range[1]);
+        if(random_y>=human_len[0]+Math.round(human_len[0]*0.3) &&
+           random_y<=human_move_range[1] &&
+           random_x>=human_len[0]/2 &&
+           random_x<=human_move_range[0]-human_len[0]/2){
+             go=true;
+             if(target[0]==0 && target[1]==0){
+               target[0]=random_x;
+               target[1]=Math.round(random_y-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
+             }else{
+               stroke(255);
+               fill(255);
+               rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
+               stroke(0);
+               fill(0);
+               target[0]=random_x;
+               target[1]=Math.round(random_y-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
+             }
+          }
+      }
     }
   }
 }
@@ -312,9 +334,9 @@ void check_go(){
     }else{
       face=false;
     }
-    human_loca[0]+=Math.round((target[0]-human_loca[0])*0.05);
-    human_loca[1]+=Math.round((target[1]-human_loca[1])*0.05);
-    if(Math.round((target[0]-human_loca[0])*0.05)==0 && Math.round((target[1]-human_loca[1])*0.05)==0){
+    human_loca[0]+=Math.round((target[0]-human_loca[0])*0.02);
+    human_loca[1]+=Math.round((target[1]-human_loca[1])*0.02);
+    if(Math.round((target[0]-human_loca[0])*0.02)==0 && Math.round((target[1]-human_loca[1])*0.02)==0){
       go=false;
       target_R=20;
       target_count=0;
