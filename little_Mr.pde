@@ -1,7 +1,11 @@
 import java.util.*;
 import java.text.*;
 
-String My_name="Little Mr.";
+String My_name;
+
+PImage bg;
+int bg_num;
+int max_bg_num;
 
 void draw_player_left(int center_x,int center_y,int head_len,int body_len,boolean arm_move){
   fill(255);
@@ -12,7 +16,8 @@ void draw_player_left(int center_x,int center_y,int head_len,int body_len,boolea
   int half_body_len_2=Math.round(body_len*0.5);
   //background
   stroke(255);
-  rect(-1,-1,human_move_range[0]+1,human_move_range[1]+1);
+  image(bg,0,0,human_move_range[0],human_move_range[1]);
+  //rect(-1,-1,human_move_range[0]+1,human_move_range[1]+1);
   //rect(center[0]-head_len/2-half_head_len,center[1]-head_len-half_head_len,
   //      head_len+half_head_len+half_head_len,half_head_len+head_len+body_len+half_body_len_2*sqrt(2)*sqrt(3)/2);
   stroke(0);
@@ -67,7 +72,7 @@ void draw_player_right(int center_x,int center_y,int head_len,int body_len,boole
   int half_body_len_2=Math.round(body_len*0.5);
   //background
   stroke(255);
-  rect(-1,-1,human_move_range[0]+1,human_move_range[1]+1);
+  image(bg,0,0,human_move_range[0],human_move_range[1]);
   //rect(center[0]-head_len/2-half_head_len,center[1]-head_len-half_head_len,
   //      head_len+half_head_len+half_head_len,half_head_len+head_len+body_len+half_body_len_2*sqrt(2)*sqrt(3)/2);
   stroke(0);
@@ -164,8 +169,14 @@ void setup(){
   //get config
   mapping=loadStrings("map.txt");
   config=loadStrings("config.txt");
-  master_name=config[0];
+  My_name=config[0];
+  My_name=My_name.substring(My_name.indexOf(":")+1,My_name.length());
+  begin_text[0]="I'm "+My_name;
+  master_name=config[1];
   master_name=master_name.substring(master_name.indexOf(":")+1,master_name.length());
+  bg_num=Integer.parseInt(config[2].substring(config[2].indexOf(":")+1,config[2].length()));
+  bg=loadImage("bg"+Integer.toString(bg_num)+".png");
+  max_bg_num=Integer.parseInt(config[3].substring(config[3].indexOf(":")+1,config[3].length()));
   if(master_name.length()==0){
     input_text="My name is ";
   }
@@ -272,6 +283,32 @@ void adjust_input_text(){
           saveStrings("map.txt",mapping);
           output_text="Thank you!\nNow, I know "+input_text;
           input_text="";
+        }else if(input_text.toLowerCase().contains("background")){
+          String temp_check=input_text.substring(input_text.toLowerCase().indexOf("background")+10,input_text.length())
+                            .replace(" ","");
+          if(temp_check.equals("")){
+            bg_num++;
+            if(bg_num>max_bg_num){
+              bg_num=1;
+            }
+            bg=loadImage("bg"+Integer.toString(bg_num)+".png");
+            output_text="Change background\nI like it! :-)\nI draw it by myself.";
+            input_text="";
+          }else{
+            try{
+              bg_num=Integer.parseInt(temp_check);
+            }catch (NumberFormatException e) {
+              bg_num=max_bg_num+1;
+            }
+            if(bg_num<=max_bg_num && bg_num>0){
+              bg=loadImage("bg"+Integer.toString(bg_num)+".png");
+              output_text="Change background\nI like it! :-)\nI draw it by myself.";
+              input_text="";
+            }else{
+              output_text="I don't have this background...\nYou can use following sentence\nto change background:\nbackground n (0<n<"+Integer.toString(max_bg_num)+")";
+              input_text="";
+            }
+          }
         }else if(input_text.toLowerCase().contains("time") ||
                 (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("?")) ||
                 (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("what"))){
@@ -455,11 +492,6 @@ void mouseClicked(){
                target[0]=mouseX;
                target[1]=Math.round(mouseY-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
              }else{
-               stroke(255);
-               fill(255);
-               rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
-               stroke(0);
-               fill(0);
                target[0]=mouseX;
                target[1]=Math.round(mouseY-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
              }
@@ -468,43 +500,21 @@ void mouseClicked(){
 
 void draw_text(){
   if(human_loca[0]>human_move_range[0]-human_loca[0]){
-    //fill(0);
+    fill(0);
     textAlign(RIGHT);
-    if(face){
-      fill(255);
-      stroke(255);
-      rect(human_loca[0]-human_len[0]/2-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
-      stroke(0);
-      fill(0);
+    if(face)
+    {
       text(talk,human_loca[0]-human_len[0]/2-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }else{
-      fill(255);
-      stroke(255);
-      rect(human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3)-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
-      stroke(0);
-      fill(0);
       text(talk,human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3)-talk.length()*10-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }
-    //fill(255);
   }else{
-    //fill(0);
     textAlign(LEFT);
     if(!face){
-      fill(255);
-      stroke(255);
-      rect(human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
-      stroke(0);
-      fill(0);
       text(talk,human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }else{
-      fill(255);
-      stroke(255);
-      rect(human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]);
-      stroke(0);
-      fill(0);
       text(talk,human_loca[0]+human_len[0]/2+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]/2,talk.length()*10,human_len[0]*2);
     }
-    //fill(255);
   }
 }
 
@@ -526,7 +536,7 @@ void check_mouse(){
         }
         stroke(255);
         fill(255);
-        rect(-1,-1,human_move_range[0]+1,human_move_range[1]+1);
+        image(bg,0,0,human_move_range[0],human_move_range[1]);
         //rect(human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3),
         //human_len[0]+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),Math.round(human_len[0]*0.3)+human_len[0]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
         fill(0);
@@ -590,7 +600,7 @@ void check_go(){
   if(go){
     stroke(255);
     fill(255);
-    rect(-1,-1,human_move_range[0]+1,human_move_range[1]+1);
+    image(bg,0,0,human_move_range[0],human_move_range[1]);
     //rect(human_loca[0]-human_len[0]/2-Math.round(human_len[0]*0.3),human_loca[1]-human_len[0]-Math.round(human_len[0]*0.3),
     //human_len[0]+Math.round(human_len[0]*0.3)+Math.round(human_len[0]*0.3),Math.round(human_len[0]*0.3)+human_len[0]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
     fill(0);
@@ -606,11 +616,6 @@ void check_go(){
       go=false;
       target_R=20;
       target_count=0;
-      stroke(255);
-      fill(255);
-      rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
-      stroke(0);
-      fill(0);
       target[0]=0;
       target[1]=0;
     }
@@ -628,13 +633,8 @@ void draw_target(){
         target_R=20;
       }
     }
-      stroke(255);
-      fill(255);
-      rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
-      stroke(0);
-      fill(0);
       stroke(255,0,0);
-      fill(255);
+      fill(255,0,0,0);
       ellipse(target[0],target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2,target_R,target_R);
       fill(0);
       stroke(0);
@@ -679,11 +679,6 @@ void draw_human(){
                target[0]=random_x;
                target[1]=Math.round(random_y-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
              }else{
-               stroke(255);
-               fill(255);
-               rect(target[0]-10,target[1]+human_len[1]+Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2-10,20,20);
-               stroke(0);
-               fill(0);
                target[0]=random_x;
                target[1]=Math.round(random_y-human_len[1]-Math.round(human_len[1]*0.5)*sqrt(2)*sqrt(3)/2);
              }

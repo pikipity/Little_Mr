@@ -1,1 +1,4 @@
+my_name:Little Mr.
 master_name:
+first_bg_num:3
+max_bg_num:4
