@@ -145,20 +145,30 @@ String stay_text[]={"So boring...","Are you sleeping?","zzZZ"};
 Date dNow = new Date( );
 SimpleDateFormat day=new SimpleDateFormat ("yyyy.MM.dd");
 SimpleDateFormat time_format=new SimpleDateFormat ("HH:mm:ss");
-SimpleDateFormat complex_format=new SimpleDateFormat ("yyyy.MM.dd  HH:mm:ss");
+SimpleDateFormat complex_format=new SimpleDateFormat ("yyyy.MM.dd\nHH:mm:ss");
 //press talk
 boolean press_talk=false;
 String press_text[]={"What are you doing?!","Oh!!","??","Go! Go!","What happened??","DoluMahupupu...",
                      "I can fly!","I am SUPERMAN!","Am I swimming or flying?\npupu..."};
 //communication
+String[] config; 
+String[] mapping;
 boolean commu=false;
-String input_text="My name is ";
+String input_text="";
 String output_text="";
 String master_name="";
 boolean input_name=false;
 boolean input_name_adjust=false;
 
 void setup(){
+  //get config
+  mapping=loadStrings("map.txt");
+  config=loadStrings("config.txt");
+  master_name=config[0];
+  master_name=master_name.substring(master_name.indexOf(":")+1,master_name.length());
+  if(master_name.length()==0){
+    input_text="My name is ";
+  }
   //init game
   size(human_move_range[0],human_move_range[1]+20);
   frameRate(fps);
@@ -215,11 +225,13 @@ void keyPressed() {
           }
           output_text="Is your name \""+master_name+"\"?(y or n)";
           input_name_adjust=true;
-          input_text="N";
+          input_text="Y";
         }else if(input_name_adjust){
           input_name_adjust=false;
           if (input_text.toLowerCase().contains("y")){
             output_text="Hello, "+master_name;
+            config[0]="master_name:"+master_name;
+            saveStrings("config.txt", config);
             input_text="";
           }else{
             output_text="What is your name?";
@@ -232,7 +244,11 @@ void keyPressed() {
       }else{
         output_text="You don't want to listen me?\nOK. I stop..";
         begin=false;
-        input_text="My name is ";
+        if(master_name.length()==0){
+          input_text="My name is ";  
+        }else{
+          input_text="";
+        }
       }
       commu=true;
       talk_count=0;
@@ -247,14 +263,23 @@ void keyPressed() {
 }
 
 void adjust_input_text(){
-  if(input_text.toLowerCase().contains("time") ||
-           (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("?")) ||
-           (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("what"))){
-          output_text=complex_format.format(dNow);
-          if(Integer.parseInt(output_text.substring(12,14))==23 || Integer.parseInt(output_text.substring(12,14))<7){
+  if(input_text.toLowerCase().contains(" means ")){
+          int N=mapping.length;
+          mapping=Arrays.copyOf(mapping,N+1);
+          mapping[N]=input_text.substring(0,input_text.toLowerCase().indexOf(" means ")).toLowerCase()
+                     +":"
+                     +input_text.substring(input_text.toLowerCase().indexOf(" means ")+7,input_text.length());
+          saveStrings("map.txt",mapping);
+          output_text="Thank you!\nNow, I know "+input_text;
+          input_text="";
+        }else if(input_text.toLowerCase().contains("time") ||
+                (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("?")) ||
+                (input_text.toLowerCase().contains("time") && input_text.toLowerCase().contains("what"))){
+              output_text=complex_format.format(dNow);
+          if(Integer.parseInt(output_text.substring(11,13))==23 || Integer.parseInt(output_text.substring(11,13))<7){
               output_text=output_text+"\nGo to sleep, now!!";
-              input_text="";
           }
+          input_text="";
         }else if(input_text.toLowerCase().contains("name") && input_text.toLowerCase().contains("your")){
           output_text="My name is \""+My_name+"\"\nYeah!!!";
         }else if(input_text.toLowerCase().contains("name") && input_text.toLowerCase().contains("my")){
@@ -270,7 +295,7 @@ void adjust_input_text(){
               master_name=master_name.substring(2,master_name.length());
             }
             output_text="Is your name \""+master_name+"\"?(y or n)";
-            input_text="N";
+            input_text="Y";
             input_name_adjust=true;
           }else{
             output_text="I remember your name is "+master_name+".\nI have a good memery. :-)";
@@ -278,9 +303,52 @@ void adjust_input_text(){
           }
         }
         else{
-          output_text="Did you say \""+input_text+"\"?\nI don't understand...";
+          for(int i=0;i<mapping.length;i++){
+            if(mapping[i].contains(":")){
+              boolean ok_get_mapping=false;
+              String key_word=mapping[i].substring(0,mapping[i].indexOf(":"));
+              if(!key_word.contains("&&")){
+                ok_get_mapping=input_text.toLowerCase().contains(mapping[i].substring(0,mapping[i].indexOf(":")));
+              }else{
+                String[] results=key_word.split("&&");
+                for(int j=0;j<results.length;j++){
+                  ok_get_mapping=true;
+                  ok_get_mapping=ok_get_mapping && input_text.toLowerCase().contains(results[j]);
+                  if(!ok_get_mapping){
+                    break;
+                  }
+                }
+              }
+              if(ok_get_mapping){
+                output_text=mapping[i].substring(mapping[i].indexOf(":")+1,mapping[i].length());
+                break;      
+              }else{
+                output_text="Did you say \""+input_text+"\"?\nI don't understand..."
+                            +"\nYou can tell me the meaning by\n"
+                            +"\"WORDS means MEANING\"";   
+              }
+            }
+          }
           input_text="";
         }
+        if(output_text.contains("!master_name")){
+             output_text=output_text.replace("!master_name",master_name);
+         }
+         if(output_text.contains("!my_name")){
+             output_text=output_text.replace("!my_name",My_name);
+          }
+          if(output_text.contains("\\n")){
+             output_text=output_text.replace("\\n","\n");
+           }
+           if(output_text.contains("!time")){
+             output_text=output_text.replace("!time",time_format.format(dNow));
+             if(Integer.parseInt(time_format.format(dNow).substring(0,2))==23 || Integer.parseInt(time_format.format(dNow).substring(0,2))<7){
+               output_text=output_text+"\nGo to sleep, now!!";
+             }
+           }
+           if(output_text.contains("!day")){
+              output_text=output_text.replace("!day",day.format(dNow));
+            }
 }
 
 void check_talk(){
@@ -621,7 +689,7 @@ void draw_human(){
              }
           }
       }
-      if(Math.random()<0.5){
+      if(Math.random()<0.7){
         if(!stay_talk && !begin){
           stay_talk=true;
           talk_num=int(random(0,5));
@@ -631,5 +699,3 @@ void draw_human(){
     }
   }
 }
-
-

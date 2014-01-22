@@ -1,0 +1,9 @@
+hello:Hello, !master_name
+good morning:Good Morning!
+good afternoon:Good Afternoon!
+good evening:Good Evening!
+you&&beautiful:Yes\nI'm very beautiful. :-)
+introduction:My name is !my_name\nI like your mouse. :-)
+clock:!time
+day:Today is !day
+
