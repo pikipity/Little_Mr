@@ -128,8 +128,8 @@ int fps=60;
 PFont font;
 //value for human
 int human_move_range[]={480,480};
-int human_len[]={50,30};
-int human_loca[]={100,100};
+int[] human_len=new int[2];
+int[] human_loca=new int[2];
 boolean move=false;
 boolean move_motion=false;
 boolean face=true;//true:left, false:right
@@ -143,18 +143,17 @@ int talk_count=0;
 int talk_num;
 //begin introduction
 boolean begin=true;
-String begin_text[]={"I'm "+My_name,"Let's play with me!!"};
+String[] begin_text;
 //stay talk
 boolean stay_talk=false;
-String stay_text[]={"So boring...","Are you sleeping?","zzZZ"};
+String[] stay_text;
 Date dNow = new Date( );
 SimpleDateFormat day=new SimpleDateFormat ("yyyy.MM.dd");
 SimpleDateFormat time_format=new SimpleDateFormat ("HH:mm:ss");
 SimpleDateFormat complex_format=new SimpleDateFormat ("yyyy.MM.dd\nHH:mm:ss");
 //press talk
 boolean press_talk=false;
-String press_text[]={"What are you doing?!","Oh!!","??","Go! Go!","What happened??","DoluMahupupu...",
-                     "I can fly!","I am SUPERMAN!","Am I swimming or flying?\npupu..."};
+String[] press_text;
 //communication
 String[] config; 
 String[] mapping;
@@ -168,15 +167,28 @@ boolean input_name_adjust=false;
 void setup(){
   //get config
   mapping=loadStrings("map.txt");
+  press_text=loadStrings("press_text.txt");
+  stay_text=loadStrings("stay_text.txt");
+  begin_text=loadStrings("begin_text.txt");
   config=loadStrings("config.txt");
+  //get human name
   My_name=config[0];
   My_name=My_name.substring(My_name.indexOf(":")+1,My_name.length());
   begin_text[0]="I'm "+My_name;
+  //get master name
   master_name=config[1];
   master_name=master_name.substring(master_name.indexOf(":")+1,master_name.length());
+  //get background number
   bg_num=Integer.parseInt(config[2].substring(config[2].indexOf(":")+1,config[2].length()));
   bg=loadImage("bg"+Integer.toString(bg_num)+".png");
   max_bg_num=Integer.parseInt(config[3].substring(config[3].indexOf(":")+1,config[3].length()));
+  //get human length
+  human_len[0]=Integer.parseInt(config[4].substring(config[4].indexOf(":")+1,config[4].length()));
+  human_len[1]=Integer.parseInt(config[5].substring(config[5].indexOf(":")+1,config[5].length()));
+  //get human init location
+  human_loca[0]=Integer.parseInt(config[6].substring(config[6].indexOf(":")+1,config[6].length()));
+  human_loca[1]=Integer.parseInt(config[7].substring(config[7].indexOf(":")+1,config[7].length()));
+  //init input text
   if(master_name.length()==0){
     input_text="My name is ";
   }
@@ -241,7 +253,7 @@ void keyPressed() {
           input_name_adjust=false;
           if (input_text.toLowerCase().contains("y")){
             output_text="Hello, "+master_name;
-            config[0]="master_name:"+master_name;
+            config[1]="master_name:"+master_name;
             saveStrings("config.txt", config);
             input_text="";
           }else{
@@ -368,24 +380,6 @@ void adjust_input_text(){
           }
           input_text="";
         }
-        if(output_text.contains("!master_name")){
-             output_text=output_text.replace("!master_name",master_name);
-         }
-         if(output_text.contains("!my_name")){
-             output_text=output_text.replace("!my_name",My_name);
-          }
-          if(output_text.contains("\\n")){
-             output_text=output_text.replace("\\n","\n");
-           }
-           if(output_text.contains("!time")){
-             output_text=output_text.replace("!time",time_format.format(dNow));
-             if(Integer.parseInt(time_format.format(dNow).substring(0,2))==23 || Integer.parseInt(time_format.format(dNow).substring(0,2))<7){
-               output_text=output_text+"\nGo to sleep, now!!";
-             }
-           }
-           if(output_text.contains("!day")){
-              output_text=output_text.replace("!day",day.format(dNow));
-            }
 }
 
 void check_talk(){
@@ -394,7 +388,7 @@ void check_talk(){
     press_talk=false;
     if(talk_count==0){
       talk=output_text;
-    }else if(talk_count==240){
+    }else if(talk_count==180){
       talk="";
       output_text="";
       talk_num=0;
@@ -404,7 +398,7 @@ void check_talk(){
     talk_count++;
   }
   if(press_talk){
-    if(talk_num<9 && talk_num>=0){
+    if(talk_num<press_text.length && talk_num>=0){
         stay_talk=false;
         if(talk_count==0){
           talk=press_text[talk_num];
@@ -421,18 +415,9 @@ void check_talk(){
     talk_count++;
     if(talk_count==180){
       talk_count=0;
-      if(talk_num<3){
+      if(talk_num<stay_text.length && talk_num>=0){
         talk=stay_text[talk_num];
-        talk_num=25;
-      }else if(talk_num==3){
-        talk="Today is "+day.format(dNow);
-        talk_num=25;
-      }else if(talk_num==4){
-        talk="Now, "+time_format.format(dNow);
-        if(Integer.parseInt(talk.substring(5,7))==23 || Integer.parseInt(talk.substring(5,7))<7){
-          talk=talk+"\nGo to sleep, now!!";
-        }
-        talk_num=25;
+        talk_num=stay_text.length+1;
       }else{
         talk="";
         talk_num=0;
@@ -445,7 +430,7 @@ void check_talk(){
     talk_count++;
     if(talk_count==120){
       talk_count=0;
-      if(talk_num<2){
+      if(talk_num<begin_text.length){
         talk=begin_text[talk_num];
         talk_num++;
       }else{
@@ -480,7 +465,7 @@ void mouseClicked(){
           !face)){
             if(!press_talk && !begin){
               press_talk=true;
-              talk_num=int(random(0,9));
+              talk_num=int(random(0,press_text.length));
               talk_count=0;
             }
           }else /*if(mouseY>=human_len[0]+Math.round(human_len[0]*0.3) &&
@@ -499,6 +484,25 @@ void mouseClicked(){
 }
 
 void draw_text(){
+  if(talk.contains("!master_name")){
+             talk=talk.replace("!master_name",master_name);
+         }
+         if(talk.contains("!my_name")){
+             talk=talk.replace("!my_name",My_name);
+          }
+          if(talk.contains("\\n")){
+             talk=talk.replace("\\n","\n");
+           }
+           if(talk.contains("!time")){
+             talk=talk.replace("!time",time_format.format(dNow));
+             if(Integer.parseInt(time_format.format(dNow).substring(0,2))==23 || Integer.parseInt(time_format.format(dNow).substring(0,2))<7){
+               talk=talk+"\nGo to sleep, now!!";
+             }
+           }
+           if(talk.contains("!day")){
+              talk=talk.replace("!day",day.format(dNow));
+            }
+            
   if(human_loca[0]>human_move_range[0]-human_loca[0]){
     fill(0);
     textAlign(RIGHT);
@@ -523,7 +527,7 @@ void check_mouse(){
   if(mousePressed){
     if(!press_talk && !begin){
         press_talk=true;
-        talk_num=int(random(0,9));
+        talk_num=int(random(0,press_text.length));
         talk_count=0;
      }
     if(hold){
@@ -687,7 +691,7 @@ void draw_human(){
       if(Math.random()<0.7){
         if(!stay_talk && !begin){
           stay_talk=true;
-          talk_num=int(random(0,5));
+          talk_num=int(random(0,stay_text.length));
           talk_count=0;
         }
       }

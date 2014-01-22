@@ -1,4 +1,8 @@
 my_name:Little Mr.
 master_name:
 first_bg_num:3
-max_bg_num:4
+max_bg_num:5
+head_size:50
+body_size:30
+init_location_x:200
+init_location_y:200

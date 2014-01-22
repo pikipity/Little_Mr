@@ -1,0 +1,6 @@
+So boring...
+Are you sleeping?
+zzZZ
+Today is !day
+Now, it is !time
+I am !my_name\nDo you like me?

@@ -6,4 +6,5 @@ you&&beautiful:Yes\nI'm very beautiful. :-)
 introduction:My name is !my_name\nI like your mouse. :-)
 clock:!time
 day:Today is !day
-
+happy new year:Happy New Year!!
+happy christmas:Happy Christmas!!
