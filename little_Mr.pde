@@ -388,14 +388,16 @@ void check_talk(){
     press_talk=false;
     if(talk_count==0){
       talk=output_text;
+      talk_count++;
     }else if(talk_count==180){
       talk="";
       output_text="";
       talk_num=0;
       talk_count=0;
       commu=false;
+    }else{
+      talk_count++;
     }
-    talk_count++;
   }
   if(press_talk){
     if(talk_num<press_text.length && talk_num>=0){
@@ -428,7 +430,7 @@ void check_talk(){
   }
   if(begin){
     talk_count++;
-    if(talk_count==120){
+    if(talk_count==240){
       talk_count=0;
       if(talk_num<begin_text.length){
         talk=begin_text[talk_num];
